@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h1>{{ title }}</h1>
+        
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                {{ form.course_code.label(class="form-label") }}
+                {{ form.course_code(class="form-control" + (" is-invalid" if form.course_code.errors else "")) }}
+                {% if form.course_code.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.course_code.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                {% if form.name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4) }}
+                {% if form.description.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.description.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.credits.label(class="form-label") }}
+                    {{ form.credits(class="form-control" + (" is-invalid" if form.credits.errors else "")) }}
+                    {% if form.credits.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.credits.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    {{ form.max_students.label(class="form-label") }}
+                    {{ form.max_students(class="form-control" + (" is-invalid" if form.max_students.errors else "")) }}
+                    {% if form.max_students.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.max_students.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if course and course.enrolled_count > 0 %}
+                        <small class="form-text text-muted">
+                            Current enrollment: {{ course.enrolled_count }} students
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                {{ form.submit(class="btn btn-primary") }}
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Courses - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Courses</h1>
+            <a href="{{ url_for('courses.create') }}" class="btn btn-primary">
+                Add New Course
+            </a>
+        </div>
+        
+        <!-- Search and Filter Form -->
+        <form method="GET" action="{{ url_for('courses.list_courses') }}" class="mb-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search by course code, name, or description..." 
+                           value="{{ search }}">
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <div class="form-check form-switch me-3">
+                            <input class="form-check-input" type="checkbox" name="available_only" 
+                                   id="availableOnly" value="true"
+                                   {% if available_only %}checked{% endif %}>
+                            <label class="form-check-label" for="availableOnly">
+                                Available only
+                            </label>
+                        </div>
+                        <button class="btn btn-outline-secondary" type="submit">Filter</button>
+                        {% if search or available_only %}
+                        <a href="{{ url_for('courses.list_courses') }}" class="btn btn-outline-secondary">Clear</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Courses Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Name</th>
+                        <th>Credits</th>
+                        <th>Enrolled</th>
+                        <th>Capacity</th>
+                        <th>Available</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>{{ course.course_code }}</td>
+                        <td>
+                            <a href="{{ url_for('courses.view', course_id=course.id) }}">
+                                {{ course.name }}
+                            </a>
+                        </td>
+                        <td>{{ course.credits }}</td>
+                        <td>{{ course.enrolled_count }}</td>
+                        <td>{{ course.max_students }}</td>
+                        <td>
+                            {% if course.available_seats > 0 %}
+                                <span class="text-success">{{ course.available_seats }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">Full</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('courses.view', course_id=course.id) }}" 
+                               class="btn btn-sm btn-info">View</a>
+                            <a href="{{ url_for('enrollments.course_enrollments', course_id=course.id) }}" 
+                               class="btn btn-sm btn-success">Students</a>
+                            <a href="{{ url_for('courses.edit', course_id=course.id) }}" 
+                               class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            {% if search or available_only %}
+                                No courses found matching your criteria.
+                            {% else %}
+                                No courses found. <a href="{{ url_for('courses.create') }}">Create one</a>?
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if courses|length == per_page %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('courses.index', page=page-1, search=search, available_only=available_only) }}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page }}</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('courses.index', page=page+1, search=search, available_only=available_only) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto text-center">
+        <div class="error-template">
+            <h1 class="display-1">500</h1>
+            <h2>Internal Server Error</h2>
+            <div class="error-details mb-4">
+                Sorry, something went wrong on our end. Please try again later.
+            </div>
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-house"></i> Go Home
+                </a>
+                <a href="javascript:history.back()" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-left"></i> Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

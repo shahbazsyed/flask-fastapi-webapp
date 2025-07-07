@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}All Enrollments - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>All Enrollments</h1>
+        
+        <!-- Status Filter -->
+        <div class="mb-3">
+            <a href="{{ url_for('enrollments.index') }}" 
+               class="btn btn-sm {% if not status %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All
+            </a>
+            <a href="{{ url_for('enrollments.index', status='active') }}" 
+               class="btn btn-sm {% if status == 'active' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Active
+            </a>
+            <a href="{{ url_for('enrollments.index', status='dropped') }}" 
+               class="btn btn-sm {% if status == 'dropped' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Dropped
+            </a>
+            <a href="{{ url_for('enrollments.index', status='completed') }}" 
+               class="btn btn-sm {% if status == 'completed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Completed
+            </a>
+        </div>
+        
+        <!-- Enrollments Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Enrollment Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in enrollments %}
+                    <tr>
+                        <td>{{ enrollment.id }}</td>
+                        <td>
+                            <a href="{{ url_for('enrollments.student_enrollments', student_id=enrollment.student.id) }}">
+                                {{ enrollment.student.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('enrollments.course_enrollments', course_id=enrollment.course.id) }}">
+                                {{ enrollment.course.course_code }} - {{ enrollment.course.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if enrollment.status == 'active' %}success{% elif enrollment.status == 'dropped' %}warning{% else %}secondary{% endif %}">
+                                {{ enrollment.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ enrollment.enrollment_date[:10] }}</td>
+                        <td>
+                            {% if enrollment.status == 'active' %}
+                            <form method="POST" action="{{ url_for('enrollments.complete', enrollment_id=enrollment.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-info" 
+                                        onclick="return confirm('Mark this enrollment as completed?');">
+                                    Complete
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('enrollments.delete', enrollment_id=enrollment.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="return confirm('Are you sure you want to delete this enrollment record?');">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No enrollments found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if enrollments|length == per_page %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('enrollments.index', page=page-1, status=status) }}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page }}</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('enrollments.index', page=page+1, status=status) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

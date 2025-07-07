@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} Enrollments - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>{{ course.name }}</h1>
+        <p class="text-muted">
+            Course Code: {{ course.course_code }} | 
+            Credits: {{ course.credits }} | 
+            Max Students: {{ course.max_students }}
+        </p>
+        
+        <!-- Course Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Enrolled Students</h5>
+                        <p class="card-text display-6">{{ course.enrolled_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Available Seats</h5>
+                        <p class="card-text display-6 {% if course.available_seats == 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ course.available_seats }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Capacity</h5>
+                        <p class="card-text display-6">
+                            {{ ((course.enrolled_count / course.max_students) * 100)|round|int }}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Status</h5>
+                        <p class="card-text">
+                            {% if course.available_seats > 0 %}
+                            <span class="badge bg-success fs-5">Open</span>
+                            {% else %}
+                            <span class="badge bg-danger fs-5">Full</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="mb-3">
+            <a href="{{ url_for('enrollments.course_enrollments', course_id=course.id, status='active') }}" 
+               class="btn btn-sm {% if status == 'active' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Active
+            </a>
+            <a href="{{ url_for('enrollments.course_enrollments', course_id=course.id, status='dropped') }}" 
+               class="btn btn-sm {% if status == 'dropped' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Dropped
+            </a>
+            <a href="{{ url_for('enrollments.course_enrollments', course_id=course.id, status='completed') }}" 
+               class="btn btn-sm {% if status == 'completed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Completed
+            </a>
+            <a href="{{ url_for('enrollments.course_enrollments', course_id=course.id, status='all') }}" 
+               class="btn btn-sm {% if status == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All
+            </a>
+        </div>
+        
+        <!-- Enrolled Students Table -->
+        <h3>Enrolled Students</h3>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Enrollment Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in enrollments %}
+                    <tr>
+                        <td>{{ enrollment.student.student_id }}</td>
+                        <td>
+                            <a href="{{ url_for('enrollments.student_enrollments', student_id=enrollment.student.id) }}">
+                                {{ enrollment.student.name }}
+                            </a>
+                        </td>
+                        <td>{{ enrollment.student.email }}</td>
+                        <td>
+                            <span class="badge bg-{% if enrollment.status == 'active' %}success{% elif enrollment.status == 'dropped' %}warning{% else %}secondary{% endif %}">
+                                {{ enrollment.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ enrollment.enrollment_date[:10] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No {% if status != 'all' %}{{ status }}{% endif %} enrollments found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Course Description -->
+        {% if course.description %}
+        <div class="mt-4">
+            <h3>Course Description</h3>
+            <p>{{ course.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

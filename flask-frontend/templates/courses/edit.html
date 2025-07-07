@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ course.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('courses.list_courses') }}">Courses</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('courses.view_course', course_id=course.id) }}">{{ course.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">Edit Course</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('courses.edit_course', course_id=course.id) }}">
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Course Code</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="code" 
+                               value="{{ course.course_code }}" 
+                               disabled>
+                        <small class="form-text text-muted">
+                            Course code cannot be changed after creation
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Course Name <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               placeholder="e.g., Introduction to Computer Science" 
+                               required 
+                               maxlength="200"
+                               value="{{ request.form.get('name', course.name) }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="credits" class="form-label">Credits <span class="text-danger">*</span></label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="credits" 
+                               name="credits" 
+                               min="1" 
+                               max="12" 
+                               required 
+                               value="{{ request.form.get('credits', course.credits) }}">
+                        <small class="form-text text-muted">
+                            Number of credit hours for this course (1-12)
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" 
+                                  id="description" 
+                                  name="description" 
+                                  rows="4" 
+                                  placeholder="Course description...">{{ request.form.get('description', course.description or '') }}</textarea>
+                        <small class="form-text text-muted">
+                            Optional: Provide a detailed description of the course content and objectives
+                        </small>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Update Course</button>
+                        <a href="{{ url_for('courses.view_course', course_id=course.id) }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <strong>Note:</strong> 
+            <ul class="mb-0">
+                <li>Fields marked with <span class="text-danger">*</span> are required.</li>
+                <li>The course code cannot be changed after creation.</li>
+                <li>Changes will affect all enrollments for this course.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const credits = document.getElementById('credits').value;
+        
+        if (!name || !credits) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        if (credits < 1 || credits > 12) {
+            e.preventDefault();
+            alert('Credits must be between 1 and 12.');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

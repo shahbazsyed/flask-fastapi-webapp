@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Courses - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Courses</h1>
+        
+        <!-- Search Form -->
+        <form method="get" action="{{ url_for('courses.list_courses') }}" class="mb-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" 
+                           name="q" 
+                           class="form-control" 
+                           placeholder="Search courses by name or code..." 
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('courses.create_course') }}" class="btn btn-success w-100">Add Course</a>
+                </div>
+            </div>
+        </form>
+
+        {% if search_query %}
+            <p class="text-muted">Showing results for: <strong>{{ search_query }}</strong> 
+                <a href="{{ url_for('courses.list_courses') }}" class="ms-2">Clear</a>
+            </p>
+        {% endif %}
+
+        <!-- Courses Table -->
+        {% if courses %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Credits</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>{{ course.course_code }}</td>
+                            <td>
+                                <a href="{{ url_for('courses.view_course', course_id=course.id) }}">
+                                    {{ course.name }}
+                                </a>
+                            </td>
+                            <td>{{ course.credits }}</td>
+                            <td>{{ course.description[:100] if course.description else 'No description' }}{% if course.description and course.description|length > 100 %}...{% endif %}</td>
+                            <td>
+                                <a href="{{ url_for('courses.view_course', course_id=course.id) }}" 
+                                   class="btn btn-sm btn-info">View</a>
+                                <a href="{{ url_for('courses.edit_course', course_id=course.id) }}" 
+                                   class="btn btn-sm btn-warning">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Course pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('courses.list_courses', q=search_query, page=page-1) }}">
+                            Previous
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('courses.list_courses', q=search_query, page=p) }}">
+                                    {{ p }}
+                                </a>
+                            </li>
+                        {% elif p == 4 and page > 5 %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% elif p == total_pages - 3 and page < total_pages - 4 %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('courses.list_courses', q=search_query, page=page+1) }}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+
+            <p class="text-center text-muted">
+                Showing {{ (page - 1) * per_page + 1 }} - {{ page * per_page if page * per_page < total else total }} of {{ total }} courses
+            </p>
+        {% else %}
+            <div class="alert alert-info">
+                {% if search_query %}
+                    No courses found matching your search.
+                {% else %}
+                    No courses available yet.
+                {% endif %}
+                {% if session.get('user') %}
+                    <a href="{{ url_for('courses.create_course') }}" class="alert-link">Create the first course!</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

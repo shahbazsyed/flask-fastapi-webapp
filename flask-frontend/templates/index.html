@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Home - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Student Enrollment System</h1>
+        
+        <!-- Quick Links -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Students</h5>
+                        <p class="card-text">Manage student records and enrollments</p>
+                        <a href="{{ url_for('students.list_students') }}" class="btn btn-primary">View Students</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Courses</h5>
+                        <p class="card-text">Browse and manage course offerings</p>
+                        <a href="{{ url_for('courses.list_courses') }}" class="btn btn-primary">View Courses</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Enrollments</h5>
+                        <p class="card-text">Track and manage student enrollments</p>
+                        <a href="{{ url_for('enrollments.index') }}" class="btn btn-primary">View Enrollments</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">System Statistics</h5>
+            </div>
+            <div class="card-body" id="stats-container">
+                <button id="load-stats" class="btn btn-info">Load Statistics</button>
+                <div id="stats-result" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <!-- Features -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Student Management</h6>
+                        <ul>
+                            <li>Create and manage student records</li>
+                            <li>View student enrollment history</li>
+                            <li>Track active, dropped, and completed courses</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Course Management</h6>
+                        <ul>
+                            <li>Create and manage course offerings</li>
+                            <li>Set enrollment limits and track capacity</li>
+                            <li>View enrolled students by course</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Enrollment Management</h6>
+                        <ul>
+                            <li>Enroll students in courses</li>
+                            <li>Drop courses with status tracking</li>
+                            <li>Enforce enrollment constraints</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>System Features</h6>
+                        <ul>
+                            <li>RESTful API integration</li>
+                            <li>Open access (no authentication required)</li>
+                            <li>Real-time capacity tracking</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Status -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">API Status</h6>
+            </div>
+            <div class="card-body">
+                <p>Backend API URL: <code>{{ api_base_url }}</code></p>
+                <button id="check-api-status" class="btn btn-primary btn-sm">Check API Status</button>
+                <div id="api-status-result" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('check-api-status').addEventListener('click', async function() {
+    const resultDiv = document.getElementById('api-status-result');
+    resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div> Checking...';
+    
+    try {
+        const response = await fetch('{{ api_base_url }}/health');
+        const data = await response.json();
+        
+        if (response.ok) {
+            resultDiv.innerHTML = '<div class="alert alert-success mt-2">API is healthy! Status: ' + data.status + '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="alert alert-danger mt-2">API returned error: ' + response.status + '</div>';
+        }
+    } catch (error) {
+        resultDiv.innerHTML = '<div class="alert alert-danger mt-2">Failed to connect to API: ' + error.message + '</div>';
+    }
+});
+
+document.getElementById('load-stats').addEventListener('click', async function() {
+    const statsDiv = document.getElementById('stats-result');
+    statsDiv.innerHTML = '<div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>';
+    
+    try {
+        const response = await fetch('{{ api_base_url }}/stats');
+        const data = await response.json();
+        
+        if (response.ok) {
+            statsDiv.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Students</h5>
+                                <p class="card-text display-6">${data.total_students}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Courses</h5>
+                                <p class="card-text display-6">${data.total_courses}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Active Enrollments</h5>
+                                <p class="card-text display-6">${data.active_enrollments}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            statsDiv.innerHTML = '<div class="alert alert-danger">Failed to load statistics</div>';
+        }
+    } catch (error) {
+        statsDiv.innerHTML = '<div class="alert alert-danger">Error loading statistics: ' + error.message + '</div>';
+    }
+});
+</script>
+{% endblock %}

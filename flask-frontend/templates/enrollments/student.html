@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name }}'s Enrollments - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>{{ student.name }}'s Enrollments</h1>
+        <p class="text-muted">Student ID: {{ student.student_id }} | Email: {{ student.email }}</p>
+        
+        <!-- Enrollment Form -->
+        {% if available_courses %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Enroll in a New Course</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('enrollments.enroll') }}">
+                    {{ form.hidden_tag() }}
+                    {{ form.student_id }}
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.course_id(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <strong>No courses available for enrollment.</strong> 
+            All courses are either full or you are already enrolled in them.
+        </div>
+        {% endif %}
+        
+        <!-- Status Filter -->
+        <div class="mb-3">
+            <a href="{{ url_for('enrollments.student_enrollments', student_id=student.id, status='active') }}" 
+               class="btn btn-sm {% if status == 'active' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Active
+            </a>
+            <a href="{{ url_for('enrollments.student_enrollments', student_id=student.id, status='dropped') }}" 
+               class="btn btn-sm {% if status == 'dropped' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Dropped
+            </a>
+            <a href="{{ url_for('enrollments.student_enrollments', student_id=student.id, status='completed') }}" 
+               class="btn btn-sm {% if status == 'completed' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Completed
+            </a>
+            <a href="{{ url_for('enrollments.student_enrollments', student_id=student.id, status='all') }}" 
+               class="btn btn-sm {% if status == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                All
+            </a>
+        </div>
+        
+        <!-- Enrollments Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Credits</th>
+                        <th>Status</th>
+                        <th>Enrollment Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in enrollments %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('enrollments.course_enrollments', course_id=enrollment.course.id) }}">
+                                {{ enrollment.course.course_code }}
+                            </a>
+                        </td>
+                        <td>{{ enrollment.course.name }}</td>
+                        <td>{{ enrollment.course.credits }}</td>
+                        <td>
+                            <span class="badge bg-{% if enrollment.status == 'active' %}success{% elif enrollment.status == 'dropped' %}warning{% else %}secondary{% endif %}">
+                                {{ enrollment.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ enrollment.enrollment_date[:10] }}</td>
+                        <td>
+                            {% if enrollment.status == 'active' and enrollment.id in drop_forms %}
+                            <form method="POST" action="{{ url_for('enrollments.drop') }}" style="display: inline;">
+                                {{ drop_forms[enrollment.id].hidden_tag() }}
+                                {{ drop_forms[enrollment.id].enrollment_id }}
+                                <button type="submit" class="btn btn-sm btn-warning" 
+                                        onclick="return confirm('Are you sure you want to drop {{ enrollment.course.name }}?');">
+                                    Drop Course
+                                </button>
+                            </form>
+                            {% elif enrollment.status == 'dropped' %}
+                            <small class="text-muted">Dropped</small>
+                            {% elif enrollment.status == 'completed' %}
+                            <small class="text-success">Completed</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            No {% if status != 'all' %}{{ status }}{% endif %} enrollments found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Summary -->
+        <div class="mt-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Active Courses</h5>
+                            <p class="card-text display-6">
+                                {{ enrollments|selectattr('status', 'equalto', 'active')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Credits</h5>
+                            <p class="card-text display-6">
+                                {{ enrollments|selectattr('status', 'equalto', 'active')|sum(attribute='course.credits') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title">Completed Courses</h5>
+                            <p class="card-text display-6">
+                                {{ enrollments|selectattr('status', 'equalto', 'completed')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
